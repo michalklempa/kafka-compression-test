@@ -28,12 +28,14 @@ def produce(producer, topic, message):
 
 def main():
     parser = argparse.ArgumentParser(description='Test Kafka compression types')
-    parser.add_argument('--compression', '-c', type=str, choices=ALL_COMPRESSION_TYPES + ['all'],
+    parser.add_argument('--compression', type=str, choices=ALL_COMPRESSION_TYPES + ['all'],
                         default='all', help='Compression type to test (default: all)')
-    parser.add_argument('--files', '-n', type=int, default=2,
+    parser.add_argument('--files', type=int, default=2,
                         help='Number of JSON files to load (default: 2)')
-    parser.add_argument('--messages', '-m', type=int, default=5000,
+    parser.add_argument('--messages', type=int, default=5000,
                         help='Number of messages to produce (default: 5000)')
+    parser.add_argument('--topic', type=str, default='json-compression',
+                        help='Base name for topic (default: json-compression)')
     args = parser.parse_args()
 
     compression_types = ALL_COMPRESSION_TYPES if args.compression == 'all' else [args.compression]
@@ -50,7 +52,7 @@ def main():
         kafka_settings = KafkaSettings(compression_type=compression_type)
 
         producer = Producer(kafka_settings.model_dump(by_alias=True))
-        topic = "json-compression1"
+        topic = f"{args.topic}-{compression_type}-n{args.files}-m{args.messages}"
         for i in range(args.messages):
             produce(producer, topic, random.choice(messages))
 
