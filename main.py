@@ -4,6 +4,7 @@ from confluent_kafka import Producer
 import time
 import argparse
 import random
+from tabulate import tabulate
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -42,6 +43,7 @@ def main():
         with open(f'system_snapshot_{i:02d}.json', 'r') as f:
             messages.append(f.read())
 
+    results = []
     for compression_type in compression_types:
         start = time.time_ns()
         print(f"Start compression_type {compression_type}")
@@ -56,6 +58,17 @@ def main():
         end = time.time_ns()
         duration_sec = (end - start) / 10**9
         print(f"End compression_type {compression_type} in time {duration_sec}s")
+
+        results.append({
+            "compression": compression_type,
+            "time_sec": duration_sec,
+            "files": args.files,
+            "messages": args.messages
+        })
+
+    print(f"\n### Message count: {args.messages:,} (files: {args.files})\n")
+    table_data = [[r['compression'], f"{r['time_sec']:.2f}s", ""] for r in results]
+    print(tabulate(table_data, headers=["Compression", "Time", "Log Size"], tablefmt="github"))
 
 if __name__ == "__main__":
     main()
